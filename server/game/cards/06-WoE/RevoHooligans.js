@@ -14,13 +14,7 @@ class RevoHooligans extends Card {
                     ability.actions.cardLastingEffect((context) => ({
                         duration: 'lastingEffect',
                         target: context.target,
-                        until: {
-                            onAddToken: (event) =>
-                                event.card == context.target && !context.target.tokens.paint,
-                            onSwap: (event) =>
-                                (event.card == context.target || event.origin == context.target) &&
-                                !context.target.tokens.paint
-                        },
+                        while: (target) => target.hasToken('paint'),
                         effect: ability.effects.changeHouse('mars')
                     }))
                 ]

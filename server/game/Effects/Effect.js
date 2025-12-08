@@ -25,6 +25,10 @@ const _ = require('underscore');
  *                    or 'hand'). This has no effect if a specific card is passed
  *                    to match.  Card effects only.
  * effect           - object representing the effect to be applied.
+ * while            - Function from target to boolean. If the while function returns
+ *                    `false` for a target, the effect is unapplied from the target
+ *                    but not wholely removed. If it ever returns `true` for that
+ *                    target, it is restored.
  */
 class Effect {
     constructor(game, source, properties, effect) {
@@ -33,6 +37,7 @@ class Effect {
         this.match = properties.match || (() => true);
         this.duration = properties.duration;
         this.until = properties.until || {};
+        this.while = properties.while || (() => true);
         this.condition = properties.condition || (() => true);
         this.location = properties.location || 'play area';
         this.printedAbility = properties.printedAbility !== false;
@@ -105,7 +110,10 @@ class Effect {
             // Get any targets which are no longer valid
             let invalidTargets = _.filter(
                 this.targets,
-                (target) => !this.match(target, this.context) || !this.isValidTarget(target)
+                (target) =>
+                    !this.match(target, this.context) ||
+                    !this.isValidTarget(target) ||
+                    !this.while(target)
             );
             // Remove invalid targets
             this.removeTargets(invalidTargets);
@@ -118,19 +126,26 @@ class Effect {
             // Check for new targets
             let newTargets = _.filter(
                 this.getTargets(),
-                (target) => !this.targets.includes(target) && this.isValidTarget(target)
+                (target) =>
+                    !this.targets.includes(target) &&
+                    this.isValidTarget(target) &&
+                    this.while(target)
             );
             // Apply the effect to new targets
             _.each(newTargets, (target) => this.addTarget(target));
             return stateChanged || newTargets.length > 0;
         } else if (this.targets.includes(this.match)) {
-            if (!this.isValidTarget(this.match)) {
+            if (!this.isValidTarget(this.match) || !this.while(this.match)) {
                 this.cancel();
                 return true;
             }
 
             return this.effect.recalculate(this.match) || stateChanged;
-        } else if (!this.targets.includes(this.match) && this.isValidTarget(this.match)) {
+        } else if (
+            !this.targets.includes(this.match) &&
+            this.isValidTarget(this.match) &&
+            this.while(this.match)
+        ) {
             this.addTarget(this.match);
             return true;
         }

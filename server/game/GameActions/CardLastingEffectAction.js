@@ -6,6 +6,7 @@ class CardLastingEffectAction extends CardGameAction {
         this.duration = 'untilPlayerTurnEnd';
         this.condition = null;
         this.until = null;
+        this.while = null;
         this.effect = [];
         this.targetLocation = null;
     }
@@ -28,7 +29,8 @@ class CardLastingEffectAction extends CardGameAction {
             context: context,
             duration: this.duration,
             targetLocation: this.targetLocation,
-            until: this.until
+            until: this.until,
+            while: this.while
         };
         this.effect = effect.map((factory) =>
             factory(context.game, context.source, effectProperties)
@@ -52,9 +54,10 @@ class CardLastingEffectAction extends CardGameAction {
             effectController: context.player,
             match: card,
             targetLocation: this.targetLocation,
-            until: this.until
+            until: this.until,
+            while: this.while
         };
-        let duration = this.until ? 'lastingEffect' : this.duration;
+        let duration = this.until || this.while ? 'lastingEffect' : this.duration;
         return super.createEvent(
             EVENTS.onEffectApplied,
             { card: card, context: context },

@@ -13,13 +13,7 @@ class VialOfMutation extends Card {
                     ability.actions.cardLastingEffect((context) => ({
                         duration: 'lastingEffect',
                         target: context.target,
-                        until: {
-                            onAddToken: (event) =>
-                                event.card == context.target && !context.target.tokens.mutation,
-                            onSwap: (event) =>
-                                (event.card == context.target || event.origin == context.target) &&
-                                !context.target.tokens.mutation
-                        },
+                        while: (target) => target.hasToken('mutation'),
                         effect: ability.effects.addTrait('mutant')
                     }))
                 ])
